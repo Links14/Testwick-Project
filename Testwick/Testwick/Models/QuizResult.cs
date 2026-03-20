@@ -1,0 +1,14 @@
+﻿namespace Testwick.Models
+{
+    public class QuizResult
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public int QuizId { get; set; }
+        public int Score { get; set; }
+
+        // Navigation
+        public Quiz Quiz { get; set; } = null!;
+    }
+}

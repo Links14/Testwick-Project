@@ -6,35 +6,35 @@ namespace Testwick.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class QuizController : ControllerBase
     {
-        // GET: api/<UsersController>
+        // GET: api/<QuizController>
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            return ["value1", "value2"];
+            return [ "value1", "value2" ];
         }
 
-        // GET api/<UsersController>/5
+        // GET api/<QuizController>/5
         [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/<UsersController>
+        // POST api/<QuizController>
         [HttpPost]
         public void Post([FromBody] string value)
         {
         }
 
-        // PUT api/<UsersController>/5
+        // PUT api/<QuizController>/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
         }
 
-        // DELETE api/<UsersController>/5
+        // DELETE api/<QuizController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {

@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using Testwick.Data;
+using Testwick.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +11,17 @@ builder.Services.AddControllers();
 // Swagger is OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // adds OpenAPI
+
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
+
+var server = "(localdb)\\MSSQLLocalDB";
+var connectionString = $"Server={server};Database=Testwick;Trusted_Connection=True;TrustCertificate=True;";
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(connectionString);
+});
 
 var app = builder.Build();
 
