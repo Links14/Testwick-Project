@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Testwick.DTOs;
+using Testwick.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -6,38 +8,38 @@ namespace Testwick.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class QuestionsController : ControllerBase
+    public class QuestionsController(IQuestionService questionService) : ControllerBase
     {
-        // GET: api/<ValuesController>
+        private readonly IQuestionService _questionService = questionService;
+
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> GetAll()
         {
-            return [ "value1", "value2" ];
+            return Ok(await _questionService.GetAllAsync());
         }
 
-        // GET api/<ValuesController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            return "value";
+            var question = await _questionService.GetByIdAsync(id);
+            if (question is null) return NotFound();
+            return Ok(question);
         }
 
-        // POST api/<ValuesController>
+        [HttpGet("topic/{topic}")]
+        public async Task<IActionResult> GetByTopic(string topic)
+        {
+            return Ok(await _questionService.GetByTopicAsync(topic));
+        }
+
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Create(CreateQuestionDto dto)
         {
+            var created = await _questionService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<ValuesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+        // Do not allow access to Update or Delete functionality
+        // Hard deletions should be done by a serverside administrator through SSMS
     }
 }

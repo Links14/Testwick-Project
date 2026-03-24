@@ -1,5 +1,6 @@
 ﻿namespace Testwick.Services
-{ 
+{
+    using DTOs;
     public interface ITopicService
     {
         Task<IEnumerable<TopicDto>> GetAllAsync();

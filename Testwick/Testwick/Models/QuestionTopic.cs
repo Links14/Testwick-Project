@@ -8,6 +8,6 @@
 
         // navigation
         public Question Question { get; set; } = null!;
-        public Topic Topics { get; set; } = null!;
+        public Topic Topic { get; set; } = null!;
     }
 }

@@ -1,17 +1,15 @@
-﻿using System.Collections.ObjectModel;
-
-namespace Testwick.Models
+﻿namespace Testwick.Models
 {
     public class Quiz
     {
         public int Id { get; set; }
-        public string Text { get; set; } = string.Empty;
-        public int CorrectChoiceId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Guid AdminToken { get; set; } = Guid.NewGuid();
+        public Guid ContributorToken { get; set; } = Guid.NewGuid();
+        public string Title { get; set; } = string.Empty;
 
         // Navigation
-        public QuestionChoice CorrectChoice { get; set; } = null!;
-        public ICollection<QuestionChoiceOrder> QuestionChoiceOrders { get; set; } = [];
-        public ICollection<QuestionTopic> QuestionTopics { get; set; } = [];
         public ICollection<QuizQuestion> QuizQuestions { get; set; } = [];
+        public ICollection<QuizResult> QuizResults { get; set; } = [];
     }
 }

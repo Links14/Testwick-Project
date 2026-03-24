@@ -2,14 +2,19 @@
 {
     public class Question
     {
-        // Question owned content
         public int Id { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string Text { get; set; } = string.Empty;
-        public int CorrectChoice { get; set; } // Constraint FK_CorrectChoice
+        public int CorrectChoiceId { get; set; }
 
-        // queried data
-        public List<QuestionChoice> Choices { get; set; } = [];
-        public List<Topic> Topics { get; set; } = [];
+        // Navigation
+        public ICollection<QuestionChoice> Choices { get; set; } = [];
+        public ICollection<QuestionTopic> QuestionTopics { get; set; } = [];
+
+        public QuestionChoice? GetCorrectChoice()
+        {
+            return Choices
+                .FirstOrDefault(c => c.Id == CorrectChoiceId);
+        }
     }
-
 }

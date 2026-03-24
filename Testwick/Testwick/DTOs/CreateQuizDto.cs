@@ -7,6 +7,12 @@
         public List<QuizQuestionDto> Questions { get; set; } = [];  // ordered by Position
     }
 
+    public class QuizCreatedDto : QuizDto
+    {
+        public Guid AdminToken { get; set; }
+        public Guid ContributorToken { get; set; }
+    }
+
     public class QuizQuestionDto
     // used inside QuizDto — a lightweight question summary, not the full QuestionDto
     {

@@ -1,4 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using Testwick.Data;
+using Testwick.DTOs;
+using Testwick.Models;
+using Testwick.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -6,38 +12,65 @@ namespace Testwick.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class QuizController : ControllerBase
+    public class QuizController(IQuizService quizService) : ControllerBase
     {
-        // GET: api/<QuizController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IQuizService _quizService = quizService;
+
+
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            return [ "value1", "value2" ];
+            var quiz = await _quizService.GetByIdAsync(id);
+            return quiz is null ? NotFound() : Ok(quiz);
         }
 
-        // GET api/<QuizController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<QuizController>
+        // returns QuizCreatedDto - the only token including response
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Create(CreateQuizDto dto)
         {
+            var created = await _quizService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PUT api/<QuizController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+
+        // admin gated
+        [HttpGet("admin/{adminToken:Guid}")]
+        public async Task<IActionResult> GetByAdminToken(Guid adminToken)
         {
+            var quiz = await _quizService.GetByAdminTokenAsync(adminToken);
+            return quiz is null ? NotFound() : Ok(quiz);
         }
 
-        // DELETE api/<QuizController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpPut("admin/{adminToken:Guid}")]
+        public async Task<IActionResult> Update(Guid adminToken, CreateQuizDto dto)
         {
+            var success = await _quizService.UpdateByAdminTokenAsync(adminToken, dto);
+            return success ? NoContent() : NotFound();
+        }
+
+        [HttpPut("admin/{adminToken:Guid}/AddQuestion/")]
+        public async Task<IActionResult> AddQuestion(Guid adminToken, int questionId)
+        {
+            var updated = await _quizService.AddExistingQuestionByAdminTokenAsync(adminToken, questionId);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+
+        // contributor gated
+
+        // Load the quiz so the contributor can see what's already in it
+        [HttpGet("contribute/{contributorToken:guid}")]
+        public async Task<IActionResult> GetByContributorToken(Guid contributorToken)
+        {
+            var quiz = await _quizService.GetByContributorTokenAsync(contributorToken);
+            return quiz is null ? NotFound() : Ok(quiz);
+        }
+
+        // submit a new question
+        [HttpPost("contribute/{contributorToken:guid}")]
+        public async Task<IActionResult> ContributeQuestion(Guid contributorToken, CreateQuestionDto dto)
+        {
+            var update = await _quizService.ContributeQuestionAsync(contributorToken, dto);
+            return update is null ? NotFound() : Ok(update);
         }
     }
 }

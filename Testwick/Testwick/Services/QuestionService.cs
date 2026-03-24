@@ -1,7 +1,7 @@
-﻿using Testwick.DTOs;
-using Testwick.Models;
+﻿using Microsoft.EntityFrameworkCore;
 using Testwick.Data;
-using Microsoft.EntityFrameworkCore;
+using Testwick.DTOs;
+using Testwick.Models;
 
 namespace Testwick.Services
 {
@@ -9,43 +9,101 @@ namespace Testwick.Services
     {
         private readonly AppDbContext _db = db;
 
-        public Task<Question> CreateAsync(CreateQuestionDto question)
+        public async Task<IEnumerable<QuestionDto>> GetAllAsync() 
         {
-            throw new NotImplementedException();
+            return await _db.Questions
+                .Include(q => q.Choices)
+                .Include(q => q.QuestionTopics).ThenInclude(qt => qt.Topic)
+                .Select(q => MapToDto(q))
+                .ToListAsync();
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public async Task<QuestionDto?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var question = await _db.Questions
+                .Include(q => q.Choices)
+                .Include(q => q.QuestionTopics).ThenInclude(qt => qt.Topic)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            return question is null ? null : MapToDto(question);
+        }
+        public async Task<IEnumerable<QuestionDto>> GetByTopicAsync(string topicName)
+        {
+            return await _db.Questions
+                .Include(q => q.Choices)
+                .Include(q => q.QuestionTopics).ThenInclude(qt => qt.Topic)
+                .Where(q => q.QuestionTopics.Any(qt => qt.Topic.Name == topicName))
+                .Select(q => MapToDto(q))
+                .ToListAsync();
         }
 
-        //public async Task<Question> CreateAsync(CreateQuestionDto question) =>
-        //    await _db. ;
-
-        //public async Task<bool> DeleteAsync(int id) =>
-        //    await _db. ;
-        //    //DeleteAsync(id);
-
-        public async Task<IEnumerable<Question>> GetAllAsync() =>
-            await _db.Questions.Include(q => q.Topics).ToListAsync();
-
-        public async Task<Question?> GetByIdAsync(int id) =>
-            await _db.Questions.Include(q => q.Topics).FirstOrDefaultAsync(q => q.Id == id);
-
-        public Task<IEnumerable<Question>> GetByTopicAsync(string topic)
+        public async Task<QuestionDto> CreateAsync(CreateQuestionDto dto)
         {
-            throw new NotImplementedException();
+            if (dto.Choices.Count < 2)
+                throw new ArgumentException("A question must have at least 2 choices.");
+
+            if (dto.CorrectChoiceIndex < 0 || dto.CorrectChoiceIndex >= dto.Choices.Count)
+                throw new ArgumentException("CorrectChoiceIndex must refer to a valid choice.");
+
+            // Create the question first so choices can reference its Id
+            var question = new Question { Text = dto.Text };
+            _db.Questions.Add(question);
+            await _db.SaveChangesAsync();
+
+            // Create choices owned by this question — CorrectChoiceId resolved by index
+            var choices = dto.Choices
+                .Select((c, i) => new QuestionChoice
+                {
+                    QuestionId = question.Id,
+                    Text = c.Text,
+                    Position = i
+                })
+                .ToList();
+
+            _db.QuestionChoices.AddRange(choices);
+            await _db.SaveChangesAsync();
+
+            // Now we can set the correct choice Id
+            question.CorrectChoiceId = choices[dto.CorrectChoiceIndex].Id;
+
+            // Link requested topics (skip any IDs that don't exist)
+            if (dto.TopicIds.Count > 0)
+            {
+                var existingTopicIds = await _db.Topics
+                    .Where(t => dto.TopicIds.Contains(t.Id))
+                    .Select(t => t.Id)
+                    .ToListAsync();
+
+                _db.QuestionTopics.AddRange(existingTopicIds.Select(topicId => new QuestionTopic
+                {
+                    QuestionId = question.Id,
+                    TopicId = topicId
+                }));
+            }
+
+            await _db.SaveChangesAsync();
+            return (await GetByIdAsync(question.Id))!;
         }
 
-        public Task<bool> UpdateAsync(int id, CreateQuestionDto question)
+        private static QuestionDto MapToDto(Question q)
         {
-            throw new NotImplementedException();
+            QuestionDto dto = new()
+            {
+                Id = q.Id,
+                Text = q.Text,
+                CorrectChoiceId = q.CorrectChoiceId,
+                Choices = [.. q.Choices
+                .OrderBy(c => c.Position)
+                .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })],
+                Topics = [.. q.QuestionTopics.Select(qt => qt.Topic.Name)]
+            };
+            if (dto.Choices.Count < 2)
+                throw new Exception("A question must have at least 2 choices");
+
+            if (!dto.Choices.Any(c => c.Id == dto.CorrectChoiceId))
+                throw new Exception("At least one correct answer is required");
+
+            return dto;
         }
-
-        //public async Task<IEnumerable<Question>> GetByTopicAsync(string topic) =>
-        //    await _db. ;
-
-        //public async Task<bool> UpdateAsync(int id, CreateQuestionDto question) =>
-        //    await _db. ;
     }
 }
