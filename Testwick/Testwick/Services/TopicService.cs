@@ -30,14 +30,14 @@ namespace Testwick.Services
             return new TopicDto { Id = topic.Id, Name = topic.Name };
         }
 
-        public async Task<bool> UpdateAsync(int id, CreateTopicDto dto)
-        {
-            var topic = await _db.Topics.FindAsync(id);
-            if (topic is null) return false;
-            topic.Name = dto.Name;
-            await _db.SaveChangesAsync();
-            return true;
-        }
+        //public async Task<bool> UpdateAsync(int id, CreateTopicDto dto)
+        //{
+        //    var topic = await _db.Topics.FindAsync(id);
+        //    if (topic is null) return false;
+        //    topic.Name = dto.Name;
+        //    await _db.SaveChangesAsync();
+        //    return true;
+        //}
 
         public async Task<bool> DeleteAsync(int id)
         {

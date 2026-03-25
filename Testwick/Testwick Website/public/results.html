@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testwick – Results</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .results-shell {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .score-header {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+    }
+    .result-name {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 1.5rem;
+    }
+    .score-pct {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+    .result-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+    }
+
+    /* Grade label */
+    .grade-label {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+    .grade-a { color: var(--gold); }
+    .grade-b { color: #8EC95A; }
+    .grade-c { color: #C9A44C; }
+    .grade-d { color: #C9755A; }
+    .grade-f { color: var(--red); }
+
+    /* Per-question review */
+    .q-review-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.3s ease both;
+    }
+    .q-review-block:nth-child(2) { animation-delay: 0.05s; }
+    .q-review-block:nth-child(3) { animation-delay: 0.10s; }
+    .q-review-block:nth-child(4) { animation-delay: 0.15s; }
+    .q-review-block:nth-child(5) { animation-delay: 0.20s; }
+    .q-review-block:nth-child(n+6) { animation-delay: 0.25s; }
+
+    .q-review-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .q-status-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .q-status-icon.correct { background: var(--green-bg); color: var(--green); border: 1px solid rgba(77,155,111,0.4); }
+    .q-status-icon.wrong   { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(194,85,85,0.4); }
+    .q-status-icon.skipped { background: var(--surface-3); color: var(--text-dim); border: 1px solid var(--border); }
+
+    .q-review-text {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* Actions */
+    .results-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">Testwick</a>
+  <nav class="nav-links">
+    <a href="index.html">← Home</a>
+  </nav>
+</header>
+
+<div class="results-shell">
+
+  <!-- Loading -->
+  <div id="loading" class="loading-center">
+    <div class="spinner"></div>
+    <span>Loading results…</span>
+  </div>
+
+  <!-- Error -->
+  <div id="error-state" class="hidden mt-4">
+    <div class="alert alert-error"></div>
+    <div class="text-center mt-3">
+      <a href="index.html" class="btn btn-ghost">← Back to home</a>
+    </div>
+  </div>
+
+  <!-- Main results -->
+  <div id="results-container" class="hidden">
+
+    <div class="score-header">
+      <div class="result-name" id="result-name"></div>
+
+      <div class="score-circle">
+        <div class="score-number" id="score-num"></div>
+        <div class="score-denom" id="score-denom"></div>
+      </div>
+
+      <div class="score-pct" id="score-pct"></div>
+      <div class="grade-label" id="grade-label"></div>
+      <div class="result-meta" id="result-meta"></div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:1rem;">Answer Review</div>
+    <div id="answers-list"></div>
+
+    <div class="results-actions">
+      <a href="index.html" class="btn btn-ghost">← Take another quiz</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print Results</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script>
+  async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    if (!id || isNaN(id)) {
+      showError('No result ID provided.');
+      return;
+    }
+
+    let result;
+    try {
+      const res = await fetch(API.resultById(id));
+      if (res.status === 404) throw new Error('Result not found.');
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      result = await res.json();
+    } catch(e) {
+      showError(e.message);
+      return;
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('results-container').classList.remove('hidden');
+
+    renderResults(result);
+  }
+
+  function renderResults(result) {
+    const total    = result.answers.length;
+    const correct  = result.answers.filter(a => a.isCorrect).length;
+    const skipped  = result.answers.filter(a => a.chosenChoiceId === null).length;
+    const pct      = total > 0 ? Math.round((result.score / total) * 100) : 0;
+
+    // Header
+    document.getElementById('result-name').textContent =
+      `${result.firstName} ${result.lastName} — Quiz #${result.quizId}`;
+    document.getElementById('score-num').textContent   = result.score;
+    document.getElementById('score-denom').textContent = `/ ${total}`;
+    document.getElementById('score-pct').textContent   = `${pct}% correct`;
+    document.getElementById('grade-label').textContent = gradeText(pct);
+    document.getElementById('grade-label').className   = 'grade-label ' + gradeClass(pct);
+    document.getElementById('result-meta').textContent =
+      `Submitted ${formatDate(result.createdAt)}  ·  ${skipped} skipped`;
+
+    // Answers
+    const list = document.getElementById('answers-list');
+    result.answers.forEach((a, idx) => {
+      const skipped  = a.chosenChoiceId === null;
+      const statusCls = skipped ? 'skipped' : (a.isCorrect ? 'correct' : 'wrong');
+      const icon      = skipped ? '—' : (a.isCorrect ? '✓' : '✗');
+
+      const block = document.createElement('div');
+      block.className = 'q-review-block';
+
+      // We need to show choices. We only have questionId and chosenChoiceId.
+      // We'll fetch the question to get choices.
+      block.innerHTML = `
+        <div class="q-review-header">
+          <div class="q-status-icon ${statusCls}">${icon}</div>
+          <div>
+            <div class="q-review-text" id="q-text-${a.questionId}">
+              <span style="color:var(--text-dim);font-size:0.8rem;font-family:var(--font-mono);">Loading question…</span>
+            </div>
+          </div>
+        </div>
+        <div class="choice-list" id="choices-${a.questionId}"></div>
+      `;
+      list.appendChild(block);
+
+      // Fetch question details
+      fetchAndRenderQuestion(a, idx);
+    });
+  }
+
+  async function fetchAndRenderQuestion(answer, idx) {
+    const letters = ['A','B','C','D','E','F','G','H'];
+    let question;
+    try {
+      const res = await fetch(API.questionById(answer.questionId));
+      if (!res.ok) throw new Error();
+      question = await res.json();
+    } catch {
+      document.getElementById(`q-text-${answer.questionId}`).textContent =
+        `Question #${answer.questionId} (details unavailable)`;
+      return;
+    }
+
+    document.getElementById(`q-text-${answer.questionId}`).textContent = question.text;
+
+    const container = document.getElementById(`choices-${answer.questionId}`);
+    container.innerHTML = '';
+
+    question.choices.forEach((c, ci) => {
+      const isChosen  = c.id === answer.chosenChoiceId;
+      const isCorrect = c.id === question.correctChoiceId;
+      const skipped   = answer.chosenChoiceId === null;
+
+      let cls = 'choice-btn disabled';
+      if (isChosen && answer.isCorrect)  cls += ' correct';
+      else if (isChosen && !answer.isCorrect) cls += ' wrong';
+      else if (isCorrect && !skipped)    cls += ' correct';
+
+      const btn = document.createElement('button');
+      btn.className = cls;
+      btn.disabled = true;
+      btn.innerHTML = `
+        <span class="choice-letter">${letters[ci] || ci+1}</span>
+        ${escHtml(c.text)}
+        ${isChosen && !answer.isCorrect ? ' <span style="margin-left:auto;font-size:0.8em;opacity:0.8;">your answer</span>' : ''}
+        ${isCorrect ? ' <span style="margin-left:auto;font-size:0.8em;opacity:0.9;">correct</span>' : ''}
+      `;
+      container.appendChild(btn);
+    });
+
+    // Skipped note
+    if (answer.chosenChoiceId === null) {
+      const note = document.createElement('div');
+      note.style.cssText = 'font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:0.5rem;';
+      note.textContent = 'Skipped — no answer selected';
+      container.appendChild(note);
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function gradeText(pct) {
+    if (pct >= 90) return 'Excellent';
+    if (pct >= 80) return 'Good';
+    if (pct >= 70) return 'Satisfactory';
+    if (pct >= 60) return 'Passing';
+    return 'Needs Improvement';
+  }
+
+  function gradeClass(pct) {
+    if (pct >= 90) return 'grade-a';
+    if (pct >= 80) return 'grade-b';
+    if (pct >= 70) return 'grade-c';
+    if (pct >= 60) return 'grade-d';
+    return 'grade-f';
+  }
+
+  function formatDate(iso) {
+    try {
+      return new Date(iso).toLocaleString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    } catch { return iso; }
+  }
+
+  function showError(msg) {
+    document.getElementById('loading').classList.add('hidden');
+    const state = document.getElementById('error-state');
+    state.classList.remove('hidden');
+    state.querySelector('.alert').textContent = msg;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  init();
+</script>
+</body>
+</html>
