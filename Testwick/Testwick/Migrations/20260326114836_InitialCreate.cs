@@ -69,8 +69,8 @@ namespace Testwick.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
                     Position = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -86,7 +86,7 @@ namespace Testwick.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CorrectChoiceId = table.Column<int>(type: "int", nullable: false)
+                    CorrectChoiceId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -189,7 +189,7 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuestionChoices_QuestionId_Position",
                 table: "QuestionChoices",
-                columns: new[] { "QuestionId", "Position" },
+                columns: ["QuestionId", "Position"],
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -200,7 +200,7 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuestionTopics_QuestionId_TopicId",
                 table: "QuestionTopics",
-                columns: new[] { "QuestionId", "TopicId" },
+                columns: ["QuestionId", "TopicId"],
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -216,13 +216,13 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_QuizId_Position",
                 table: "QuizQuestions",
-                columns: new[] { "QuizId", "Position" },
+                columns: ["QuizId", "Position"],
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_QuizId_QuestionId",
                 table: "QuizQuestions",
-                columns: new[] { "QuizId", "QuestionId" },
+                columns: ["QuizId", "QuestionId"],
                 unique: true);
 
             migrationBuilder.CreateIndex(

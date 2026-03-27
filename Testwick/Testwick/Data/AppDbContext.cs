@@ -20,7 +20,7 @@ namespace Testwick.Data
 
             // Question
             modelBuilder.Entity<Question>()
-                .HasOne<QuestionChoice>()
+                .HasOne(q => q.CorrectChoice)
                 .WithMany()
                 .HasForeignKey(q => q.CorrectChoiceId)
                 .OnDelete(DeleteBehavior.Restrict);

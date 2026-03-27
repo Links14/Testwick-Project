@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testwick</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        /* ── Index-specific styles ── */
+        .hero {
+            padding: 5rem 1.5rem 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(200,168,75,0.1) 0%, transparent 70%);
+                pointer-events: none;
+            }
+
+        .hero-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+            .hero-eyebrow::before,
+            .hero-eyebrow::after {
+                content: '──';
+                color: var(--gold-dim);
+                font-size: 0.6rem;
+            }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 7vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+            .hero h1 em {
+                font-style: italic;
+                color: var(--gold);
+            }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin: 0 auto 3rem;
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 640px) {
+            .hub-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hub-panel {
+            background: var(--surface);
+            padding: 2rem;
+            transition: background var(--transition);
+        }
+
+            .hub-panel:hover {
+                background: var(--surface-2);
+            }
+
+        .hub-panel-icon {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .hub-panel h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .hub-panel p {
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .inline-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+            .inline-form input {
+                flex: 1;
+                min-width: 0;
+                background: var(--surface-3);
+                border: 1px solid var(--border-2);
+                border-radius: var(--radius);
+                color: var(--text);
+                font-family: var(--font-mono);
+                font-size: 0.85rem;
+                padding: 0.55rem 0.75rem;
+                outline: none;
+                transition: border-color var(--transition);
+            }
+
+                .inline-form input:focus {
+                    border-color: var(--gold);
+                }
+
+                .inline-form input::placeholder {
+                    color: var(--text-dim);
+                }
+
+        .create-section {
+            max-width: 860px;
+            margin: 3rem auto 0;
+            padding: 0 0 4rem;
+        }
+
+        .create-section-heading {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+            .create-section-heading::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+
+        /* Created Quiz Result */
+        #create-result {
+            background: var(--surface);
+            border: 1px solid var(--gold-dim);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            animation: fadeUp 0.4s ease;
+        }
+
+            #create-result h3 {
+                font-size: 1.15rem;
+                margin-bottom: 0.5rem;
+            }
+
+            #create-result .quiz-id-display {
+                font-family: var(--font-mono);
+                color: var(--gold);
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+        .token-section {
+            margin-bottom: 1rem;
+        }
+
+            .token-section label {
+                font-size: 0.72rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--text-muted);
+                display: block;
+                margin-bottom: 0.35rem;
+            }
+
+        .token-links {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        <span class="site-logo">Testwick <span>/ collaborative quiz platform</span></span>
+    </header>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+        <div class="hero-eyebrow">Socratic Collaboration</div>
+        <h1>Test<em>wick</em></h1>
+        <p class="hero-sub">Create and share collaborative quizzes. Invite contributors. Track results.</p>
+    </section>
+
+    <!-- ── Hub Grid ── -->
+    <div style="padding: 0 1.5rem;">
+        <div class="hub-grid fade-up">
+
+            <!-- Take a Quiz -->
+            <div class="hub-panel">
+                <div class="hub-panel-icon">📋</div>
+                <h3>Take a Quiz</h3>
+                <p>Enter a quiz name to begin an examination.</p>
+                <div class="inline-form">
+                    <input type="number" id="quiz-id-input" placeholder="Quiz Name" min="1" />
+                    <button class="btn btn-primary btn-sm" onclick="goToQuiz()">Begin →</button>
+                </div>
+                <div id="quiz-id-error" class="alert alert-error mt-2 hidden"></div>
+            </div>
+
+            <!-- Create a Quiz -->
+            <div class="hub-panel">
+                <div class="hub-panel-icon">✏️</div>
+                <h3>Create a Quiz</h3>
+                <p>Start a new quiz and receive your admin &amp; contributor links.</p>
+                <div class="inline-form">
+                    <input type="text" id="quiz-title-input" placeholder="Quiz title…" />
+                    <button class="btn btn-primary btn-sm" onclick="createQuiz()">Create →</button>
+                </div>
+                <div id="create-error" class="alert alert-error mt-2 hidden"></div>
+                <div id="create-loading" class="mt-2 hidden" style="display:none;">
+                    <span class="spinner"></span>
+                </div>
+            </div>
+
+            <!-- Admin Access -->
+            <div class="hub-panel">
+                <div class="hub-panel-icon">🔐</div>
+                <h3>Admin Dashboard</h3>
+                <p>Enter your admin token to manage your quiz.</p>
+                <div class="inline-form">
+                    <input type="text" id="admin-token-input" placeholder="Admin token (GUID)…" style="font-family:var(--font-mono);font-size:0.75rem;" />
+                    <button class="btn btn-outline btn-sm" onclick="goToAdmin()">Open →</button>
+                </div>
+                <div id="admin-error" class="alert alert-error mt-2 hidden"></div>
+            </div>
+
+            <!-- Contributor Access -->
+            <div class="hub-panel">
+                <div class="hub-panel-icon">🤝</div>
+                <h3>Contribute a Question</h3>
+                <p>Enter your contributor token to add a question to a quiz.</p>
+                <div class="inline-form">
+                    <input type="text" id="contrib-token-input" placeholder="Contributor token (GUID)…" style="font-family:var(--font-mono);font-size:0.75rem;" />
+                    <button class="btn btn-outline btn-sm" onclick="goToContrib()">Open →</button>
+                </div>
+                <div id="contrib-error" class="alert alert-error mt-2 hidden"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Created Quiz Result ── -->
+    <div class="create-section">
+        <div id="create-result" class="hidden">
+            <div class="section-label">Quiz Created</div>
+            <h3>Your quiz is ready</h3>
+            <div class="quiz-id-display">Quiz ID: <span id="result-quiz-id"></span></div>
+
+            <div class="token-section">
+                <label>Admin Token (keep private — full control)</label>
+                <div class="token-box">
+                    <code id="result-admin-token"></code>
+                    <button class="token-copy-btn" onclick="copyToken('result-admin-token', this)">copy</button>
+                </div>
+            </div>
+
+            <div class="token-section">
+                <label>Contributor Token (share with contributors)</label>
+                <div class="token-box">
+                    <code id="result-contrib-token"></code>
+                    <button class="token-copy-btn" onclick="copyToken('result-contrib-token', this)">copy</button>
+                </div>
+            </div>
+
+            <div class="token-links">
+                <button class="btn btn-primary btn-sm" onclick="openAdmin()">Open Admin Dashboard →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // ── Navigate to quiz ──────────────────────────────────────
+        function goToQuiz() {
+            const id = document.getElementById('quiz-id-input').value.trim();
+            const err = document.getElementById('quiz-id-error');
+
+            if (!id || isNaN(id) || Number(id) < 1) {
+                err.textContent = 'Please enter a valid quiz ID.';
+                err.classList.remove('hidden');
+                return;
+            }
+
+            //if (!name) {
+            //    err.textContent = 'Please enter a valid quiz name.';
+            //    err.classList.remove('hidden');
+            //    return;
+            //}
+
+            // query database for names
+
+            err.classList.add('hidden');
+            window.location.href = `quiz.html?id=${id}`;
+        }
+
+        document.getElementById('quiz-id-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') goToQuiz();
+        });
+
+        // ── Create quiz ───────────────────────────────────────────
+        let createdAdminToken = null;
+
+        async function createQuiz() {
+            const title = document.getElementById('quiz-title-input').value.trim();
+            const err = document.getElementById('create-error');
+            const loading = document.getElementById('create-loading');
+            const result = document.getElementById('create-result');
+
+            if (!title) {
+                err.textContent = 'Please enter a quiz title.';
+                err.classList.remove('hidden');
+                return;
+            }
+            err.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            try {
+                const res = await fetch(API.quizCreate(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, questionIds: [] })
+                });
+                if (!res.ok) throw new Error(`Server error ${res.status}`);
+                const data = await res.json();
+
+                createdAdminToken = data.adminToken;
+                document.getElementById('result-quiz-id').textContent = data.id;
+                document.getElementById('result-admin-token').textContent = data.adminToken;
+                document.getElementById('result-contrib-token').textContent = data.contributorToken;
+                result.classList.remove('hidden');
+                result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (e) {
+                err.textContent = 'Failed to create quiz: ' + e.message;
+                err.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('quiz-title-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') createQuiz();
+        });
+
+        function openAdmin() {
+            if (createdAdminToken) window.location.href = `admin.html?token=${createdAdminToken}`;
+        }
+
+        // ── Admin navigation ──────────────────────────────────────
+        function goToAdmin() {
+            const tok = document.getElementById('admin-token-input').value.trim();
+            const err = document.getElementById('admin-error');
+            if (!isGuid(tok)) {
+                err.textContent = 'Please enter a valid GUID token.';
+                err.classList.remove('hidden');
+                return;
+            }
+            err.classList.add('hidden');
+            window.location.href = `admin.html?token=${tok}`;
+        }
+
+        document.getElementById('admin-token-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') goToAdmin();
+        });
+        document.getElementById('admin-token-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') goToAdmin();
+        });
+
+        // ── Contributor navigation ────────────────────────────────
+        function goToContrib() {
+            const tok = document.getElementById('contrib-token-input').value.trim();
+            const err = document.getElementById('contrib-error');
+            if (!isGuid(tok)) {
+                err.textContent = 'Please enter a valid GUID token.';
+                err.classList.remove('hidden');
+                return;
+            }
+            err.classList.add('hidden');
+            window.location.href = `contribute.html?token=${tok}`;
+        }
+
+        document.getElementById('contrib-token-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') goToContrib();
+        });
+
+        // ── Helpers ───────────────────────────────────────────────
+        function isGuid(s) {
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        }
+
+        function copyToken(elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'copied!';
+                btn.style.color = 'var(--green)';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1800);
+            });
+        }
+    </script>
+</body>
+</html>

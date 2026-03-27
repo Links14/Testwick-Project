@@ -13,7 +13,8 @@ namespace Testwick.Services
         {
             return await _db.Questions
                 .Include(q => q.Choices)
-                .Include(q => q.QuestionTopics).ThenInclude(qt => qt.Topic)
+                .Include(q => q.QuestionTopics)
+                .ThenInclude(qt => qt.Topic)
                 .Select(q => MapToDto(q))
                 .ToListAsync();
         }
@@ -40,31 +41,33 @@ namespace Testwick.Services
         public async Task<QuestionDto> CreateAsync(CreateQuestionDto dto)
         {
             if (dto.Choices.Count < 2)
-                throw new ArgumentException("A question must have at least 2 choices.");
+                throw new ArgumentException("A question must have at least 2 choices." +
+                    $"\nQuestions has {dto.Choices.Count} choices");
 
             if (dto.CorrectChoiceIndex < 0 || dto.CorrectChoiceIndex >= dto.Choices.Count)
                 throw new ArgumentException("CorrectChoiceIndex must refer to a valid choice.");
 
             // Create the question first so choices can reference its Id
-            var question = new Question { Text = dto.Text };
-            _db.Questions.Add(question);
-            await _db.SaveChangesAsync();
-
-            // Create choices owned by this question — CorrectChoiceId resolved by index
-            var choices = dto.Choices
-                .Select((c, i) => new QuestionChoice
-                {
-                    QuestionId = question.Id,
+            var question = new Question
+            {
+                Text = dto.Text,
+                Choices = [.. dto.Choices
+                .Select((c, i) =>
+                new QuestionChoice() {
                     Text = c.Text,
                     Position = i
-                })
-                .ToList();
+                })]
+            };
 
-            _db.QuestionChoices.AddRange(choices);
+            Console.Write("Add question to db.Questions");
+            await _db.Questions.AddAsync(question);
+            Console.Write("Saving add question");
             await _db.SaveChangesAsync();
+            Console.Write("Saved add question");
 
-            // Now we can set the correct choice Id
-            question.CorrectChoiceId = choices[dto.CorrectChoiceIndex].Id;
+            if (question.Choices.Count < dto.CorrectChoiceIndex)
+                throw new ArgumentException("CorrectChoiceIndex is greater that the number of choices passed.");
+            question.CorrectChoiceId = question.Choices.ToList()[dto.CorrectChoiceIndex].Id;
 
             // Link requested topics (skip any IDs that don't exist)
             if (dto.TopicIds.Count > 0)
@@ -91,16 +94,21 @@ namespace Testwick.Services
             {
                 Id = q.Id,
                 Text = q.Text,
-                CorrectChoiceId = q.CorrectChoiceId,
+                //CorrectChoiceId =q.CorrectChoiceId,
                 Choices = [.. q.Choices
-                .OrderBy(c => c.Position)
-                .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })],
+                    .OrderBy(c => c.Position)
+                    .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })],
                 Topics = [.. q.QuestionTopics.Select(qt => qt.Topic.Name)]
             };
-            if (dto.Choices.Count < 2)
-                throw new Exception("A question must have at least 2 choices");
 
-            if (!dto.Choices.Any(c => c.Id == dto.CorrectChoiceId))
+            if (dto.Choices.Count < 2)
+                throw new Exception("A question must have at least 2 choices." +
+                    $"\nQuestions has {dto.Choices.Count} choices");
+
+            if (q.CorrectChoiceId is null)
+                throw new ArgumentException("No valid CorrectChoice Value");
+
+            if (!dto.Choices.Any(c => c.Id == q.CorrectChoiceId))
                 throw new Exception("At least one correct answer is required");
 
             return dto;

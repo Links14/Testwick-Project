@@ -1,30 +1,28 @@
 ﻿namespace Testwick.DTOs
 {
-    public class QuizDto
+    public abstract class QuizBase<IQuestion> where IQuestion : QuestionDto
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public List<QuizQuestionDto> Questions { get; set; } = [];  // ordered by Position
+        public List<IQuestion> Questions { get; set; } = [];  // ordered by Position
     }
 
-    public class QuizCreatedDto : QuizDto
-    {
-        public Guid AdminToken { get; set; }
-        public Guid ContributorToken { get; set; }
-    }
 
-    public class QuizQuestionDto
-    // used inside QuizDto — a lightweight question summary, not the full QuestionDto
-    {
-        public int Id { get; set; }
-        public string Text { get; set; } = string.Empty;
-        public List<ChoiceDto> Choices { get; set; } = [];
-        public int CorrectChoiceId { get; set; }
-    }
+    // Quiz
+    public class QuizDto : QuizBase<QuestionDto> { }
 
+    // Post
     public class CreateQuizDto
     {
         public string Title { get; set; } = string.Empty;
         public List<int> QuestionIds { get; set; } = [];  // ordered, becomes Position
+    }
+
+
+    // Get Admin Context
+    public class QuizAdminDto : QuizBase<QuestionAdminDto>
+    {
+        public Guid AdminToken { get; set; }
+        public Guid ContributorToken { get; set; }
     }
 }

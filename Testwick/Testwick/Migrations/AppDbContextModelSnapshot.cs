@@ -30,7 +30,7 @@ namespace Testwick.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CorrectChoiceId")
+                    b.Property<int?>("CorrectChoiceId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -241,11 +241,12 @@ namespace Testwick.Migrations
 
             modelBuilder.Entity("Testwick.Models.Question", b =>
                 {
-                    b.HasOne("Testwick.Models.QuestionChoice", null)
+                    b.HasOne("Testwick.Models.QuestionChoice", "CorrectChoice")
                         .WithMany()
                         .HasForeignKey("CorrectChoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CorrectChoice");
                 });
 
             modelBuilder.Entity("Testwick.Models.QuestionChoice", b =>

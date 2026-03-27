@@ -7,14 +7,15 @@
         // Get - Reads
         Task<IEnumerable<QuizDto>> GetAllAsync();
         Task<QuizDto?> GetByIdAsync(int id);
-        Task<QuizDto?> GetByAdminTokenAsync(Guid adminToken);        // admin landing page
+        Task<QuizAdminDto?> GetByAdminTokenAsync(Guid adminToken);        // admin landing page
         Task<QuizDto?> GetByContributorTokenAsync(Guid contributorToken); // contributor landing page
 
         // Post
-        Task<QuizCreatedDto> CreateAsync(CreateQuizDto dto);
-        
+        Task<QuizAdminDto> CreateAsync(CreateQuizDto dto);
+
         // Put - Admin access Only
-        Task<QuizDto?> AddExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId);
+        Task<QuizAdminDto?> AddExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId);
+        Task<QuizAdminDto?> RemoveExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId);
         Task<bool> UpdateByAdminTokenAsync(Guid adminToken, CreateQuizDto dto);
         
         // Post - Contributor access only

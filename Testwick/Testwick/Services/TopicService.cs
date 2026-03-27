@@ -22,8 +22,11 @@ namespace Testwick.Services
             return topic is null ? null : new TopicDto { Id = topic.Id, Name = topic.Name };
         }
 
-        public async Task<TopicDto> CreateAsync(CreateTopicDto dto)
+        public async Task<TopicDto?> CreateAsync(CreateTopicDto dto)
         {
+            if (_db.Topics.Any(t => t.Name == dto.Name))
+                return null;
+
             var topic = new Topic { Name = dto.Name };
             _db.Topics.Add(topic);
             await _db.SaveChangesAsync();

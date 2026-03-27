@@ -25,24 +25,24 @@ namespace Testwick.Services
             var quiz = await LoadQuizWithQuestions(q => q.Id == id);
             return quiz is null ? null : MapToDto(quiz);
         }
-        public async Task<QuizDto?> GetByAdminTokenAsync(Guid adminToken)
+        public async Task<QuizAdminDto?> GetByAdminTokenAsync(Guid adminToken)
         {
             var quiz = await LoadQuizWithQuestions(q => q.AdminToken == adminToken);
-            return quiz is null ? null : MapToDto(quiz);
+            return quiz is null ? null : MapToCreatedDto(quiz);
         }
         public async Task<QuizDto?> GetByContributorTokenAsync(Guid contributorToken)
         {
-            var quiz = await LoadQuizWithQuestions(q => q.ContributorToken == contributorToken);
+            var quiz = await LoadQuizWithQuestions(q => q.ContributorToken == contributorToken || q.AdminToken == contributorToken); // make admin backwards compatible with lower access contributor
             return quiz is null ? null : MapToDto(quiz);
         }
 
-
         // Post
-        public async Task<QuizCreatedDto> CreateAsync(CreateQuizDto dto)
+        public async Task<QuizAdminDto> CreateAsync(CreateQuizDto dto)
         {
             var quiz = new Quiz { Title = dto.Title };
             _db.Add(quiz);
             await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
 
             _db.QuizQuestions.AddRange(dto.QuestionIds.Select((questionId, i) => new QuizQuestion
             {
@@ -52,6 +52,7 @@ namespace Testwick.Services
             }));
 
             await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
 
             var created = await LoadQuizWithQuestions(q => q.Id == quiz.Id);
             return MapToCreatedDto(created!);
@@ -76,15 +77,13 @@ namespace Testwick.Services
             }));
 
             await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
             return true;
         }
 
-        public async Task<QuizDto?> AddExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId)
+        public async Task<QuizAdminDto?> AddExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId)
         {
-            var quiz = await _db.Quizzes
-                .Where(q => q.AdminToken == adminToken)
-                .Include(q => q.QuizQuestions)
-                .FirstOrDefaultAsync();
+            var quiz = await LoadQuizWithQuestions(q => q.AdminToken == adminToken);
 
             if (quiz is null) return null;
 
@@ -105,33 +104,63 @@ namespace Testwick.Services
             });
 
             await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
             return await GetByAdminTokenAsync(adminToken);
         }
 
+        public async Task<QuizAdminDto?> RemoveExistingQuestionByAdminTokenAsync(Guid adminToken, int questionId)
+        {
+            // Get quiz ID only, no need to load navigation collections
+            var quizId = await _db.Quizzes
+                .Where(q => q.AdminToken == adminToken)
+                .Select(q => q.Id)
+                .FirstOrDefaultAsync();
+
+            if (quizId == 0) return null;
+            
+            // Delete the QuizQuestion row directly
+            var rowsDeleted = await _db.QuizQuestions
+                .Where(qq => qq.QuizId == quizId && qq.QuestionId == questionId)
+                .ExecuteDeleteAsync(); // EF Core 7+ method for direct DB deletion
+
+            if (rowsDeleted == 0)
+                throw new Exception("No matching question in this quiz to remove.");
+
+            // Clear tracker just in case
+            _db.ChangeTracker.Clear();            
+            return await GetByAdminTokenAsync(adminToken);
+        }
+
+
+        // does not properly add to db
         public async Task<QuizDto?> ContributeQuestionAsync(Guid contributorToken, CreateQuestionDto dto)
         {
             var quiz = await _db.Quizzes
-                .Where(q => q.ContributorToken == contributorToken)
+                .Where(q => q.ContributorToken == contributorToken || q.AdminToken == contributorToken) // make admin backwards compatible with lower access contributor
                 .Include(q => q.QuizQuestions)
                 .FirstOrDefaultAsync();
 
             if (quiz is null) return null;
+            if (dto is null) return null;
 
             // Delegate question creation to QuestionService — no logic duplication
             var createdQuestion = await _questionService.CreateAsync(dto);
+            int id = createdQuestion.Id;
 
-            int nextPosition = quiz.QuizQuestions.Count == 0
-                ? 0
+            await _db.SaveChangesAsync();
+
+            int nextPosition = quiz.QuizQuestions.Count == 0 ? 0
                 : quiz.QuizQuestions.Max(qq => qq.Position) + 1;
-
+            
             _db.QuizQuestions.Add(new QuizQuestion
             {
                 QuizId = quiz.Id,
-                QuestionId = createdQuestion.Id,
+                QuestionId = id,
                 Position = nextPosition
             });
 
             await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
             return await GetByContributorTokenAsync(contributorToken);
         }
 
@@ -140,14 +169,19 @@ namespace Testwick.Services
         /// ==============================================================================
 
         // Single place that defines the standard eager-load shape for a quiz
-        private async Task<Quiz?> LoadQuizWithQuestions(
-            System.Linq.Expressions.Expression<Func<Quiz, bool>> predicate) =>
-            await _db.Quizzes
+        private async Task<Quiz?> LoadQuizWithQuestions(System.Linq.Expressions.Expression<Func<Quiz, bool>> predicate)
+        {
+            return await _db.Quizzes
                 .Where(predicate)
                 .Include(q => q.QuizQuestions)
                     .ThenInclude(qq => qq.Question)
                         .ThenInclude(q => q.Choices)
+                .Include(q => q.QuizQuestions)
+                    .ThenInclude(qq => qq.Question)
+                        .ThenInclude(q => q.QuestionTopics)
+                            .ThenInclude(qt => qt.Topic)
                 .FirstOrDefaultAsync();
+        }
 
         private static QuizDto MapToDto(Quiz q)
         {
@@ -157,19 +191,22 @@ namespace Testwick.Services
                 Title = q.Title,
                 Questions = [.. q.QuizQuestions
                 .OrderBy(qq => qq.Position)
-                .Select(qq => new QuizQuestionDto
+                .Select(qq => new QuestionDto
                 {
                     Id = qq.Question.Id,
                     Text = qq.Question.Text,
-                    CorrectChoiceId = qq.Question.CorrectChoiceId,
+                    //CorrectChoiceId = (int)qq.Question.CorrectChoiceId,
                     Choices = [.. qq.Question.Choices
                         .OrderBy(c => c.Position)
-                        .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })]
+                        .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })],
+                    Topics = [.. qq.Question.QuestionTopics
+                             .Select(qt => qt.Topic.Name)]
                 })]
+
             };
         }
 
-        private static QuizCreatedDto MapToCreatedDto(Quiz q)
+        private static QuizAdminDto MapToCreatedDto(Quiz q)
         {
             return new()
             {
@@ -179,14 +216,16 @@ namespace Testwick.Services
                 ContributorToken = q.ContributorToken,
                 Questions = [.. q.QuizQuestions
                 .OrderBy(qq => qq.Position)
-                .Select(qq => new QuizQuestionDto
+                .Select(qq => new QuestionAdminDto
                 {
                     Id = qq.Question.Id,
                     Text = qq.Question.Text,
-                    CorrectChoiceId = qq.Question.CorrectChoiceId,
                     Choices = [.. qq.Question.Choices
                         .OrderBy(c => c.Position)
-                        .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })]
+                        .Select(c => new ChoiceDto { Id = c.Id, Text = c.Text })],
+                    CorrectChoiceId = (int)qq.Question.CorrectChoiceId!,
+                    Topics = [.. qq.Question.QuestionTopics
+                             .Select(qt => qt.Topic.Name)]                    
                 })]
             };
         }

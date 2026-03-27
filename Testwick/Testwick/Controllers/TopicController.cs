@@ -27,7 +27,7 @@ namespace Testwick.Controllers
         public async Task<IActionResult> Create(CreateTopicDto dto)
         {
             var created = await _topicService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            return created is null ? Conflict() : CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         //[HttpPut("{id:int}")]
@@ -37,11 +37,11 @@ namespace Testwick.Controllers
         //    return success ? NoContent() : NotFound();
         //}
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var success = await _topicService.DeleteAsync(id);
-            return success ? NoContent() : NotFound();
-        }
+        //[HttpDelete("{id:int}")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var success = await _topicService.DeleteAsync(id);
+        //    return success ? NoContent() : NotFound();
+        //}
     }
 }

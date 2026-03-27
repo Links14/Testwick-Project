@@ -17,6 +17,22 @@ namespace Testwick.Controllers
         private readonly IQuizService _quizService = quizService;
 
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var quizzes = await _quizService.GetAllAsync();
+            return quizzes is null|| !quizzes.Any() ? NotFound() : Ok(quizzes);
+
+        }
+
+        [HttpGet("ByName")]
+        public async Task<IActionResult> GetByNameAsync(string title)
+        {
+            var quizzes = await _quizService.GetAllAsync();
+            var named = quizzes.Where(q => q.Title == title);
+            return named is null || !named.Any() ? NotFound() : Ok(named);
+        }
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -52,6 +68,13 @@ namespace Testwick.Controllers
         public async Task<IActionResult> AddQuestion(Guid adminToken, int questionId)
         {
             var updated = await _quizService.AddExistingQuestionByAdminTokenAsync(adminToken, questionId);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+
+        [HttpPut("admin/{adminToken:Guid}/RemoveQuestion/")]
+        public async Task<IActionResult> RemoveQuestion(Guid adminToken, int questionId)
+        {
+            var updated = await _quizService.RemoveExistingQuestionByAdminTokenAsync(adminToken, questionId);
             return updated is null ? NotFound() : Ok(updated);
         }
 
