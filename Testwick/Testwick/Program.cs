@@ -1,11 +1,9 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Testwick.Data;
 using Testwick.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
 
 // CORS Policy
 builder.Services.AddCors(options =>
@@ -40,6 +38,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+        if (contextFeature != null)
+        {
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = contextFeature.Error.Message
+            });
+        }
+    });
+});
 
 app.UseHttpsRedirection();
 

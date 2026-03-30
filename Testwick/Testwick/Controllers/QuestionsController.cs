@@ -12,6 +12,10 @@ namespace Testwick.Controllers
     {
         private readonly IQuestionService _questionService = questionService;
 
+        /// <summary>
+        /// Get all questions without showing the answer or Id
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

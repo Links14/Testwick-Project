@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Data.SqlTypes;
+using System.Net;
+using System.Reflection.Metadata.Ecma335;
 using Testwick.Data;
 using Testwick.DTOs;
 using Testwick.Models;
@@ -60,15 +63,14 @@ namespace Testwick.Services
 
         public async Task<bool> UpdateByAdminTokenAsync(Guid adminToken, CreateQuizDto dto)
         {
-            var quiz = await _db.Quizzes
-                .Where(q => q.AdminToken == adminToken)
-                .Include(q => q.QuizQuestions)
-                .FirstOrDefaultAsync();
-
+            var quiz = await LoadQuizWithQuestions(q => q.AdminToken == adminToken);
             if (quiz is null) return false;
 
             quiz.Title = dto.Title;
-            _db.QuizQuestions.RemoveRange(quiz.QuizQuestions);
+            // Remove all questions
+            var qs = await _db.QuizQuestions.Where(qq => qq.QuizId == quiz.Id).ExecuteDeleteAsync();
+
+            // Add them back
             _db.QuizQuestions.AddRange(dto.QuestionIds.Select((questionId, i) => new QuizQuestion
             {
                 QuizId = quiz.Id,
@@ -90,8 +92,10 @@ namespace Testwick.Services
             var questionExists = await _db.Questions.AnyAsync(q => q.Id == questionId);
             if (!questionExists) return null;
 
-            bool alreadyAdded = quiz.QuizQuestions.Any(qq => qq.QuestionId == questionId);
-            if (alreadyAdded) return await GetByAdminTokenAsync(adminToken);
+            // check if added to our compared quiz specifically
+            bool alreadyAdded = quiz.QuizQuestions
+                .Any(qq => qq.QuizId == quiz.Id && qq.QuestionId == questionId);
+            if (alreadyAdded) throw new Exception(message: "The question already exists in this quiz!");            
 
             int nextPosition = quiz.QuizQuestions.Count == 0 ? 0
                 : quiz.QuizQuestions.Max(qq => qq.Position) + 1;
@@ -135,10 +139,9 @@ namespace Testwick.Services
         // does not properly add to db
         public async Task<QuizDto?> ContributeQuestionAsync(Guid contributorToken, CreateQuestionDto dto)
         {
-            var quiz = await _db.Quizzes
-                .Where(q => q.ContributorToken == contributorToken || q.AdminToken == contributorToken) // make admin backwards compatible with lower access contributor
-                .Include(q => q.QuizQuestions)
-                .FirstOrDefaultAsync();
+            var quiz = await LoadQuizWithQuestions(
+                (q => q.ContributorToken == contributorToken 
+                || q.AdminToken == contributorToken));
 
             if (quiz is null) return null;
             if (dto is null) return null;

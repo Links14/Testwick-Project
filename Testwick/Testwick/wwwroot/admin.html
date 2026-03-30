@@ -678,7 +678,11 @@
                     method: 'PUT'
                 });
                 if (res.status === 404) throw new Error('Question or quiz not found.');
-                if (!res.ok) throw new Error(`Server error ${res.status}`);
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.message);
+                }
+                   /* throw new Error(`Server error ${res.status} and \n${await res.text()}`);*/
                 currentAdminQuiz = await res.json();
                 renderQuestions(currentAdminQuiz.questions);
                 document.getElementById('q-count-badge').textContent = currentAdminQuiz.questions.length;
@@ -688,7 +692,8 @@
                 msg.classList.remove('hidden');
                 setTimeout(() => msg.classList.add('hidden'), 3000);
             } catch (e) {
-                err.textContent = 'Failed to add question: ' + e.message;
+                console.error("FULL ERROR:", e);
+                err.textContent = 'Failed to remove question: ' + e.message;
                 err.classList.remove('hidden');
             }
         }
@@ -712,9 +717,7 @@
 
                 if (res.status === 404) throw new Error('Question or quiz not found.');
                 if (!res.ok) throw new Error(`Server error ${res.status}`);
-                console.log(currentAdminQuiz);
                 currentAdminQuiz = await res.json();
-                console.log(currentAdminQuiz);
                 renderQuestions(currentAdminQuiz.questions);
                 document.getElementById('q-count-badge').textContent = currentAdminQuiz.questions.length;
                 document.getElementById('stat-questions').textContent = currentAdminQuiz.questions.length;

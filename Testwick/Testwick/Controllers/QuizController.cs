@@ -29,7 +29,7 @@ namespace Testwick.Controllers
         public async Task<IActionResult> GetByNameAsync(string title)
         {
             var quizzes = await _quizService.GetAllAsync();
-            var named = quizzes.Where(q => q.Title == title);
+            var named = quizzes.Where(q => q.Title.Equals(title, StringComparison.CurrentCultureIgnoreCase));
             return named is null || !named.Any() ? NotFound() : Ok(named);
         }
 
@@ -67,8 +67,15 @@ namespace Testwick.Controllers
         [HttpPut("admin/{adminToken:Guid}/AddQuestion/")]
         public async Task<IActionResult> AddQuestion(Guid adminToken, int questionId)
         {
-            var updated = await _quizService.AddExistingQuestionByAdminTokenAsync(adminToken, questionId);
-            return updated is null ? NotFound() : Ok(updated);
+            try
+            {
+                var updated = await _quizService.AddExistingQuestionByAdminTokenAsync(adminToken, questionId);
+                return updated is null ? NotFound() : Ok(updated);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            } 
         }
 
         [HttpPut("admin/{adminToken:Guid}/RemoveQuestion/")]

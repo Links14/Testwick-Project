@@ -220,10 +220,11 @@
                 <h3>Take a Quiz</h3>
                 <p>Enter a quiz name to begin an examination.</p>
                 <div class="inline-form">
-                    <input type="number" id="quiz-id-input" placeholder="Quiz Name" min="1" />
+                    <input type="text" id="quiz-name-input" placeholder="Quiz Name" />
                     <button class="btn btn-primary btn-sm" onclick="goToQuiz()">Begin →</button>
                 </div>
-                <div id="quiz-id-error" class="alert alert-error mt-2 hidden"></div>
+                <div id="quiz-selection" class="hidden mt-2"></div>
+                <div id="quiz-name-error" class="alert alert-error mt-2 hidden"></div>
             </div>
 
             <!-- Create a Quiz -->
@@ -300,31 +301,75 @@
     <script src="config.js"></script>
     <script>
         // ── Navigate to quiz ──────────────────────────────────────
-        function goToQuiz() {
-            const id = document.getElementById('quiz-id-input').value.trim();
-            const err = document.getElementById('quiz-id-error');
+        async function goToQuiz() {
+            const name = document.getElementById('quiz-name-input').value.trim();
+            const err = document.getElementById('quiz-name-error');
 
-            if (!id || isNaN(id) || Number(id) < 1) {
-                err.textContent = 'Please enter a valid quiz ID.';
+            // clear multiple choice container on call
+            const container = document.getElementById('quiz-selection');
+            container.innerHTML = '';
+
+            if (!name) {
+                err.textContent = 'Please enter a valid quiz name.';
                 err.classList.remove('hidden');
                 return;
             }
 
-            //if (!name) {
-            //    err.textContent = 'Please enter a valid quiz name.';
-            //    err.classList.remove('hidden');
-            //    return;
-            //}
-
-            // query database for names
-
             err.classList.add('hidden');
-            window.location.href = `quiz.html?id=${id}`;
+
+            try {
+                const url = API.quizByName(name);
+                console.log(url);
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+                const quizzes = await res.json();
+
+                if (!quizzes || quizzes.length === 0) {
+                    err.textContent = 'No quizzes found with that name.';
+                    err.classList.remove('hidden');
+                    return;
+                }
+
+                if (quizzes.length === 1) {
+                    window.location.href = `quiz.html?id=${quizzes[0].id}`;
+                    return;
+                }
+
+                // multiple matches -> show selector
+                renderQuizSelection(quizzes);
+            }
+            catch (e) {
+                err.textContent = `Failed to search quizzes: ` + e.message;
+                err.classList.remove('hidden');
+            }
         }
 
-        document.getElementById('quiz-id-input').addEventListener('keydown', e => {
+        document.getElementById('quiz-name-input').addEventListener('keydown', e => {
             if (e.key === 'Enter') goToQuiz();
         });
+
+        function renderQuizSelection(quizzes) {
+            const container = document.getElementById('quiz-selection');
+            container.innerHTML = '';
+
+            quizzes.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline btn-sm';
+                btn.style.display = 'block';
+                btn.style.merginBottom = '0.5rem';
+
+                btn.textContent = `${q.title} (ID: ${q.id})`;
+
+                btn.onclick = () => {
+                    window.location.href = `quiz.html?id=${q.id}`;
+                }
+
+                container.appendChild(btn);
+            })
+
+            container.classList.remove('hidden');
+        }
 
         // ── Create quiz ───────────────────────────────────────────
         let createdAdminToken = null;
