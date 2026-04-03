@@ -236,7 +236,7 @@
                 <p>Start a new quiz and receive your admin &amp; contributor links.</p>
                 <div class="inline-form">
                     <input type="text" id="quiz-title-input" placeholder="Quiz title…" />
-                    <button class="btn btn-primary btn-sm" onclick="createQuiz()">Create →</button>
+                    <button id="create-btn" class="btn btn-primary btn-sm" onclick="createQuiz()">Create →</button>
                 </div>
                 <div id="create-error" class="alert alert-error mt-2 hidden"></div>
                 <div id="create-loading" class="mt-2 hidden" style="display:none;">
@@ -375,8 +375,14 @@
 
         // ── Create quiz ───────────────────────────────────────────
         let createdAdminToken = null;
+        let createCooldown = false;
 
         async function createQuiz() {
+
+            // handle rapid clicks
+            if (createCooldown) return; // block clicks
+
+            const btn = document.getElementById("create-btn");
             const title = document.getElementById('quiz-title-input').value.trim();
             const err = document.getElementById('create-error');
             const loading = document.getElementById('create-loading');
@@ -400,17 +406,28 @@
                 const data = await res.json();
 
                 createdAdminToken = data.adminToken;
+                document.getElementById('quiz-title-input').textContent = ""; // clear on creation
                 document.getElementById('result-quiz-id').textContent = data.id;
                 document.getElementById('result-admin-token').textContent = data.adminToken;
                 document.getElementById('result-contrib-token').textContent = data.contributorToken;
                 result.classList.remove('hidden');
                 result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // add cooldown on success
+                createCooldown = true;
+                if (btn) btn.disabled = true;
             } catch (e) {
                 err.textContent = 'Failed to create quiz: ' + e.message;
                 err.classList.remove('hidden');
             } finally {
                 loading.classList.add('hidden');
             }
+
+            // handle re-enabling of create button
+            setTimeout(() => {
+                createCooldown = false;
+                if (btn) btn.disabled = false;
+            }, 1000);
         }
 
         document.getElementById('quiz-title-input').addEventListener('keydown', e => {
