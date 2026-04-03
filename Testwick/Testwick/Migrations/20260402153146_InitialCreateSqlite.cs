@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Testwick.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateSqlite : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,12 +15,12 @@ namespace Testwick.Migrations
                 name: "Quizzes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AdminToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ContributorToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    AdminToken = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ContributorToken = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,9 +31,9 @@ namespace Testwick.Migrations
                 name: "Topics",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,13 +44,13 @@ namespace Testwick.Migrations
                 name: "QuizResults",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    QuizId = table.Column<int>(type: "int", nullable: false),
-                    Score = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FirstName = table.Column<string>(type: "TEXT", nullable: false),
+                    LastName = table.Column<string>(type: "TEXT", nullable: false),
+                    QuizId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Score = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -67,11 +67,11 @@ namespace Testwick.Migrations
                 name: "QuestionChoices",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    Position = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Text = table.Column<string>(type: "TEXT", nullable: false),
+                    QuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Position = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -82,11 +82,11 @@ namespace Testwick.Migrations
                 name: "Questions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CorrectChoiceId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Text = table.Column<string>(type: "TEXT", nullable: false),
+                    CorrectChoiceId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -103,10 +103,10 @@ namespace Testwick.Migrations
                 name: "QuestionTopics",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    TopicId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    QuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TopicId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -129,12 +129,12 @@ namespace Testwick.Migrations
                 name: "QuizQuestions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QuizId = table.Column<int>(type: "int", nullable: false),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    Position = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    QuizId = table.Column<int>(type: "INTEGER", nullable: false),
+                    QuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Position = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -157,11 +157,11 @@ namespace Testwick.Migrations
                 name: "QuizResultAnswers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    QuizResultId = table.Column<int>(type: "int", nullable: false),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    ChosenChoiceId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    QuizResultId = table.Column<int>(type: "INTEGER", nullable: false),
+                    QuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ChosenChoiceId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -189,7 +189,7 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuestionChoices_QuestionId_Position",
                 table: "QuestionChoices",
-                columns: ["QuestionId", "Position"],
+                columns: new[] { "QuestionId", "Position" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -200,7 +200,7 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuestionTopics_QuestionId_TopicId",
                 table: "QuestionTopics",
-                columns: ["QuestionId", "TopicId"],
+                columns: new[] { "QuestionId", "TopicId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -216,13 +216,13 @@ namespace Testwick.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_QuizId_Position",
                 table: "QuizQuestions",
-                columns: ["QuizId", "Position"],
+                columns: new[] { "QuizId", "Position" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizQuestions_QuizId_QuestionId",
                 table: "QuizQuestions",
-                columns: ["QuizId", "QuestionId"],
+                columns: new[] { "QuizId", "QuestionId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

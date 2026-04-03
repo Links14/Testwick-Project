@@ -69,5 +69,26 @@ namespace Testwick.Data
                 .HasForeignKey(a => a.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            int retries = 5;
+
+            for (int i = 0; i < retries; i++)
+            {
+                try
+                {
+                    return await base.SaveChangesAsync(cancellationToken);
+                }
+                catch (Microsoft.Data.Sqlite.SqliteException ex)
+                    when (ex.SqliteErrorCode == 5)
+                {
+                    // maxes out at a 2.5 second delay
+                    await Task.Delay(500 * (i + 1), cancellationToken);
+                }
+            }
+
+            throw new Exception($"Database save failed after {retries} retries.");
+        }
     }
 }
