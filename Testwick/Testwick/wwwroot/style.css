@@ -36,6 +36,33 @@
   --radius-lg:   6px;
   --transition:  200ms ease;
 }
+/* ── Light Mode Override ───────────────────────────────────── */
+[data-theme="light"] {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface-2: #F1EFEA;
+    --surface-3: #E7E4DD;
+    --border: #D6D2C8;
+    --border-2: #C8C3B7;
+    /* KEEP GOLD (your branding stays intact) */
+    --gold: #B8963F;
+    --gold-light: #E2C870;
+    --gold-dim: #7A6428;
+    /* Flip text to dark */
+    --text: #1A1A1A;
+    --text-muted: #5F5A52;
+    --text-dim: #8A857C;
+    /* Keep semantic colors */
+    --green: #3E8E63;
+    --green-bg: rgba(62,142,99,0.12);
+    --red: #B54848;
+    --red-bg: rgba(181,72,72,0.12);
+}
+
+/* ── Ease ─-────────────────────────────────────────────────── */
+* {
+    transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+}
 
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
