@@ -400,6 +400,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 Testwick.zip
-Testwick/Testwick/wwwroot/config.js
 Testwick/Testwick/bin
 Testwick/Testwick/obj
