@@ -93,8 +93,8 @@ using (var scope = app.Services.CreateScope())
         catch (Exception ex)
         {
             Console.WriteLine($"Migration attempt {i + 1} failed: {ex.Message}");
-            if (i == retries - 1) { Console.WriteLine("Migration failed after retries. Continuing startup..."); }
-            else { Thread.Sleep(1000 * (i + 1)); } // backoff
+            if (i == retries - 1) Console.WriteLine("Migration failed after retries. Continuing startup...");
+            else Thread.Sleep(1000 * (i + 1)); // backoff
         }
     }
 }

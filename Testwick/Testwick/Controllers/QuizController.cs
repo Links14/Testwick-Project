@@ -88,7 +88,7 @@ namespace Testwick.Controllers
         // contributor gated
 
         // Load the quiz so the contributor can see what's already in it
-        [HttpGet("contribute/{contributorToken:guid}")]
+        [HttpGet("contribute/{contributorToken:Guid}")]
         public async Task<IActionResult> GetByContributorToken(Guid contributorToken)
         {
             var quiz = await _quizService.GetByContributorTokenAsync(contributorToken);
@@ -96,7 +96,7 @@ namespace Testwick.Controllers
         }
 
         // submit a new question
-        [HttpPost("contribute/{contributorToken:guid}")]
+        [HttpPost("contribute/{contributorToken:Guid}")]
         public async Task<IActionResult> ContributeQuestion(Guid contributorToken, CreateQuestionDto dto)
         {
             var update = await _quizService.ContributeQuestionAsync(contributorToken, dto);
