@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using Testwick.Data;
 using Testwick.DTOs;
 using Testwick.Models;
@@ -54,15 +55,16 @@ namespace Testwick.Services
             int score = dto.Answers.Count(a =>
                 a.ChosenChoiceId.HasValue &&
                 quizQuestions
-                    .First(q => q.Id == a.QuestionId)
-                    .CorrectChoiceId == a.ChosenChoiceId);
+                .First(q => q.Id == a.QuestionId)
+                .CorrectChoiceId == a.ChosenChoiceId);
 
             var result = new QuizResult
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 QuizId = dto.QuizId,
-                Score = score
+                Score = score,
+                QuestionCountAtTestTime = dto.Answers.Count
             };
             _db.QuizResults.Add(result);
             await _db.SaveChangesAsync();
@@ -104,6 +106,24 @@ namespace Testwick.Services
             return result is null ? null : MapToDto(result);
         }
 
+        public double GetUserAverage(string first, string last)
+        {
+            double[] results = [.. _db.QuizResults
+                .Where(qr => qr.FirstName.ToLower() == first.ToLower() 
+                && qr.LastName.ToLower() == last.ToLower())
+                .GroupBy(qr => qr.QuizId)
+                .OrderBy(g => g.Key)
+                .Select(g => g
+                    .Max(qr => qr.QuestionCountAtTestTime == 0
+                        ? 0 :
+                        100d * qr.Score / qr.QuestionCountAtTestTime
+            ))];
+
+            if (results.Length <= 0) return 0d;
+
+            return Math.Round(results.Average(), 2);
+        }
+
         private static QuizResultDto MapToDto(QuizResult r)
         {
             return new()
@@ -120,8 +140,10 @@ namespace Testwick.Services
                     // IsCorrect is deried at read time from the question's CorrectChoiceId
                     IsCorrect = a.ChosenChoiceId.HasValue &&
                         a.ChosenChoiceId == a.Question.CorrectChoiceId
-                })]
+                })],
+                QuestionCountAtTestTime = r.QuestionCountAtTestTime
             };
         }
+
     }
 }

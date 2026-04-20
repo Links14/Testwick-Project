@@ -8,6 +8,7 @@
         public string LastName { get; set; } = string.Empty;
         public int QuizId { get; set; }
         public int Score { get; set; }
+        public int QuestionCountAtTestTime { get; set; }
 
         // Navigation
         public Quiz Quiz { get; set; } = null!;

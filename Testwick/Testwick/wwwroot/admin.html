@@ -576,6 +576,7 @@
                 const res = await fetch(API.resultsByQuiz(currentAdminQuiz.id));
                 if (!res.ok) throw new Error();
                 currentResults = await res.json();
+                console.log(currentResults);
                 renderResults();
             } catch {
                 document.getElementById('results-area').innerHTML =
@@ -583,7 +584,7 @@
             }
         }
 
-        function renderResults() {
+        async function renderResults() {
             const area = document.getElementById('results-area');
             if (!currentResults.length) {
                 area.innerHTML = '<div class="inline-empty">No submissions yet.</div>';
@@ -594,22 +595,51 @@
 
             const total = currentResults.length;
             const avgScore = (currentResults.reduce((s, r) => s + r.score, 0) / total).toFixed(1);
-            const maxPoss = currentAdminQuiz.questions.length;
+            //const maxPoss = currentAdminQuiz.questions.length;
 
             document.getElementById('stat-results').textContent = total;
-            document.getElementById('stat-avg').textContent = `${avgScore}/${maxPoss}`;
 
-            const rows = currentResults.map(r => {
+            const rowsHtml = await Promise.all(currentResults.map( async (r) => {
+                const maxPoss = r.questionCountAtTestTime;
                 const pct = maxPoss > 0 ? Math.round((r.score / maxPoss) * 100) : 0;
+                //totalScorePercents += pct;
+                let userAvg = 0
+
+                try {
+                    console.log("fetching userAvgResults");
+
+                    const res = await fetch(API.userAvgResults(r.firstName, r.lastName));
+
+                    if (!res.ok) {
+                        const text = await res.text();
+                        throw new Error();
+                    }
+                    userAvg = await res.json();
+                    console.log(userAvg);
+                } catch (ex) {
+                    console.log(`Failed fetch: ${ex}`);
+                    userAvg = 0;
+                }
+
                 return `
                     <tr>
                         <td class="name-cell">${escHtml(r.firstName)} ${escHtml(r.lastName)}</td>
                         <td class="score-cell">${r.score}/${maxPoss} <span style="color:var(--text-dim)">(${pct}%)</span></td>
+                        <td class="alltime-avg-cell"><span style="color:var(--text-dim)">(${userAvg}%)</span></td>
                         <td>${formatDate(r.createdAt + `Z`)}</td>
                         <td><a href="results.html?id=${r.id}" class="btn btn-ghost btn-sm">View</a></td>
                     </tr>
                 `;
-            }).join('');
+            }))
+
+            const rows = rowsHtml.join('');
+
+            const pcts = currentResults.map(r => {
+                const maxPoss = r.questionCountAtTestTime;
+                return maxPoss > 0 ? Math.round((r.score / maxPoss) * 100) : 0;
+            });
+            let totalScorePercents = pcts.reduce((a, b) => a + b, 0);
+            document.getElementById('stat-avg').textContent = `${Math.round(totalScorePercents / total * 100) / 100}%`;
 
             area.innerHTML = `
               <table class="results-table">
@@ -617,6 +647,7 @@
                   <tr>
                     <th>Name</th>
                     <th>Score</th>
+                    <th>Alltime Average</th>
                     <th>Submitted</th>
                     <th></th>
                   </tr>

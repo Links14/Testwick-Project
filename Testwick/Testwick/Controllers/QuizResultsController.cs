@@ -25,6 +25,13 @@ namespace Testwick.Controllers
             }
         }
 
+        [HttpGet("useravg/")]
+        public IActionResult GetUserAverage(string first, string last)
+        {
+            var result = _quizResultsService.GetUserAverage(first, last);
+            return Ok(result);
+        }
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {

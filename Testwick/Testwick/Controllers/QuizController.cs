@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
-using Testwick.Data;
 using Testwick.DTOs;
-using Testwick.Models;
 using Testwick.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -16,20 +12,18 @@ namespace Testwick.Controllers
     {
         private readonly IQuizService _quizService = quizService;
 
-
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {
             var quizzes = await _quizService.GetAllAsync();
             return quizzes is null|| !quizzes.Any() ? NotFound() : Ok(quizzes);
-
         }
 
         [HttpGet("ByName")]
         public async Task<IActionResult> GetByNameAsync(string title)
         {
             var quizzes = await _quizService.GetAllAsync();
-            var named = quizzes.Where(q => q.Title.Equals(title, StringComparison.CurrentCultureIgnoreCase));
+            var named = quizzes.Where(q => q.Title.ToLower().Equals(title.ToLower(), StringComparison.CurrentCultureIgnoreCase));
             return named is null || !named.Any() ? NotFound() : Ok(named);
         }
 

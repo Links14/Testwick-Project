@@ -21,8 +21,9 @@ const API = {
     quizRemoveQuestion: (tk, qid) =>`${API_BASE}/api/Quiz/admin/${tk}/RemoveQuestion/?questionId=${qid}`,
     quizByContrib:      tk =>       `${API_BASE}/api/Quiz/contribute/${tk}`,
     quizContribute:     tk =>       `${API_BASE}/api/Quiz/contribute/${tk}`,
-
+    
     results:            () =>       `${API_BASE}/api/QuizResults`,
+    userAvgResults:     (fn, ln) => `${API_BASE}/api/QuizResults/useravg/?first=${fn}&last=${ln}`,
     resultById:         id =>       `${API_BASE}/api/QuizResults/${id}`,
     resultsByQuiz:      id =>       `${API_BASE}/api/QuizResults/quiz/${id}`,
 };

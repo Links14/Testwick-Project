@@ -1,7 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Data.SqlTypes;
-using System.Net;
-using System.Reflection.Metadata.Ecma335;
 using Testwick.Data;
 using Testwick.DTOs;
 using Testwick.Models;

@@ -10,5 +10,7 @@ namespace Testwick.Services
         Task<IEnumerable<QuizResultDto>> GetByQuizIdAsync(int quizId);
         // Retrieve a single result by its ID
         Task<QuizResultDto?> GetByIdAsync(int id);
+
+        double GetUserAverage(string first, string Last);
     }
 }
